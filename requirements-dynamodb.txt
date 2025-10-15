@@ -1,0 +1,3 @@
+# DynamoDB 관련 패키지
+aioboto3>=12.0.0
+boto3>=1.26.0

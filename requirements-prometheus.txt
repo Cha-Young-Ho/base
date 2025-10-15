@@ -1,0 +1,3 @@
+# Prometheus 관련 패키지
+prometheus-client>=0.16.0
+aiohttp-prometheus>=0.1.0
