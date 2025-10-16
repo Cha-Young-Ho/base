@@ -1,7 +1,7 @@
 import aiomysql
-from typing import List
+from typing import List, NamedTuple
 
-class MySQLConfig:
+class MySQLConfig(NamedTuple):
     dbNameKey: str
     host: str
     port: int
@@ -29,5 +29,16 @@ class MySQLManager:
             charset='utf8mb4',
             cursorclass=aiomysql.DictCursor
         )
+    
     async def get_connection(self, dbNameKey: str):
+        """커넥션 가져오기"""
+        if dbNameKey not in self.connection_pool_map:
+            raise KeyError(f"Database connection '{dbNameKey}' not found")
         return await self.connection_pool_map[dbNameKey].acquire()
+    
+    async def close_all_connections(self):
+        """모든 커넥션 풀 종료"""
+        for pool in self.connection_pool_map.values():
+            pool.close()
+            await pool.wait_closed()
+        self.connection_pool_map.clear()

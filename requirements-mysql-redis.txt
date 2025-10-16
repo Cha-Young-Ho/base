@@ -1,4 +1,0 @@
-# MySQL + Redis 패키지
--r requirements.txt
--r requirements-mysql.txt
--r requirements-redis.txt

@@ -1,0 +1,50 @@
+[project]
+name = "lts-base"
+version = "1.0.0"
+description = "Base utilities with optional DB backends (MySQL, Redis, etc.)"
+readme = "ReadMe.md"
+requires-python = ">=3.10"
+authors = [{ name = "lts" }]
+
+dependencies = [
+]
+
+[project.optional-dependencies]
+mysql = [
+  "aiomysql>=0.2.0",
+  "PyMySQL>=1.1.0",
+  "PyYAML>=6.0",
+]
+redis = [
+  "redis>=5.0.0",
+]
+dynamodb = [
+  "boto3>=1.26.0",
+  "aioboto3>=12.0.0",
+]
+memcached = [
+  "pymemcache>=4.0.0",
+  "aiomcache>=0.7.0",
+]
+prometheus = [
+  "prometheus-client>=0.16.0",
+]
+
+# 개발/테스트용 의존성
+dev = [
+  "pytest>=8.0.0",
+  "pytest-mock>=3.10.0",
+  "pytest-cov>=4.0.0",
+  "pytest-xdist>=3.0.0",
+  "pytest-asyncio>=0.21.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["yh_*"]
+exclude = ["tests*", "venv*", "type*"]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+

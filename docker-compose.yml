@@ -1,15 +1,20 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:15-alpine
-    container_name: arbitrage-platform-db
+  mysql:
+    image: mysql:8.0
+    container_name: test_mysql
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: testuser
+      MYSQL_PASSWORD: testpassword
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "3306:3306"
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
-    restart: unless-stopped
+      - mysql_data:/var/lib/mysql
+      - ./db/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+volumes:
+  mysql_data:

@@ -11,5 +11,10 @@ __pycache__/
 .vscode/
 .idea/
 
+# Python package build artifacts
+*.egg-info/
+build/
+dist/
+
 # Postgres
 data/postgres/
