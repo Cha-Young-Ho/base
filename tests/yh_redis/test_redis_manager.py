@@ -21,7 +21,6 @@ class TestRedisManager:
 
         mocker.patch("redis.asyncio.Redis", return_value=mock_connection_client)
         await redis_manager.initialize()
-
         assert redis_manager.redisClient is not None
     
     @pytest.mark.asyncio

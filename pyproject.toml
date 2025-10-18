@@ -29,6 +29,10 @@ memcached = [
 prometheus = [
   "prometheus-client>=0.16.0",
 ]
+auth = [
+  "PyJWT>=2.8.0",
+  "cryptography>=41.0.0",
+]
 
 # 개발/테스트용 의존성
 dev = [
