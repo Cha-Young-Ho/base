@@ -13,10 +13,12 @@ dependencies = [
 mysql = [
   "aiomysql>=0.2.0",
   "PyMySQL>=1.1.0",
-  "PyYAML>=6.0",
 ]
 redis = [
   "redis>=5.0.0",
+]
+config = [
+  "PyYAML>=6.0",
 ]
 dynamodb = [
   "boto3>=1.26.0",
