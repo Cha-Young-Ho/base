@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel{% endblock %}</title>
+    <link rel="stylesheet" href="/static/admin.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1><i class="fas fa-cog"></i> Admin Panel</h1>
+            <div class="nav-links">
+                <a href="/admin" class="nav-link">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                {% for model_name in models %}
+                <a href="/admin/{{ model_name }}" class="nav-link">
+                    <i class="fas fa-table"></i> {{ model_name.title() }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <script src="/static/admin.js"></script>
+</body>
+</html>

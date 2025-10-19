@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}{{ model_title }} 관리{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1><i class="fas fa-table"></i> {{ model_title }} 관리</h1>
+        <div class="header-actions">
+            <button class="btn btn-success" onclick="showAddForm()">
+                <i class="fas fa-plus"></i> 새 {{ model_title }} 추가
+            </button>
+        </div>
+    </div>
+    
+    <!-- 데이터 테이블 -->
+    <div class="data-section">
+        <div class="section-header">
+            <h2><i class="fas fa-list"></i> {{ model_title }} 목록</h2>
+            <div class="table-controls">
+                <input type="text" id="searchInput" placeholder="검색..." class="search-input">
+                <button class="btn btn-secondary" onclick="refreshTable()">
+                    <i class="fas fa-sync-alt"></i> 새로고침
+                </button>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table class="data-table" id="dataTable">
+                <thead>
+                    <tr>
+                        {% for field in fields %}
+                        <th>{{ field.name.title() }}</th>
+                        {% endfor %}
+                        <th>작업</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr data-id="{{ item.id }}">
+                        {% for field in fields %}
+                        <td>{{ item[field.name] or '-' }}</td>
+                        {% endfor %}
+                        <td class="actions">
+                            <button class="btn btn-sm btn-primary" onclick="editItem({{ item.id }})">
+                                <i class="fas fa-edit"></i> 수정
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteItem({{ item.id }})">
+                                <i class="fas fa-trash"></i> 삭제
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 추가/수정 폼 모달 -->
+    <div id="formModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">새 {{ model_title }} 추가</h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="itemForm" onsubmit="submitForm(event)">
+                    {% for field in fields %}
+                        {% if field.name != 'id' %}
+                        <div class="form-group">
+                            <label for="{{ field.name }}">{{ field.name.title() }}</label>
+                            {% if 'Optional' in field.type|string %}
+                            <input type="{{ get_input_type(field.type) }}" 
+                                   id="{{ field.name }}" 
+                                   name="{{ field.name }}" 
+                                   placeholder="{{ field.name.title() }} (선택사항)"
+                                   class="form-control">
+                            {% else %}
+                            <input type="{{ get_input_type(field.type) }}" 
+                                   id="{{ field.name }}" 
+                                   name="{{ field.name }}" 
+                                   placeholder="{{ field.name.title() }}"
+                                   {% if field.default is not dataclasses.MISSING %}value="{{ field.default }}"{% endif %}
+                                   class="form-control"
+                                   required>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">취소</button>
+                        <button type="submit" class="btn btn-primary">저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentEditId = null;
+
+function showAddForm() {
+    currentEditId = null;
+    document.getElementById('modalTitle').textContent = '새 {{ model_title }} 추가';
+    document.getElementById('itemForm').reset();
+    document.getElementById('formModal').style.display = 'block';
+}
+
+function editItem(id) {
+    currentEditId = id;
+    document.getElementById('modalTitle').textContent = '{{ model_title }} 수정';
+    
+    // 기존 데이터로 폼 채우기
+    const row = document.querySelector(`tr[data-id="${id}"]`);
+    const cells = row.querySelectorAll('td');
+    const fields = {{ fields|list|tojson }};
+    
+    fields.forEach((field, index) => {
+        if (field.name !== 'id') {
+            const input = document.getElementById(field.name);
+            if (input) {
+                input.value = cells[index].textContent.trim() || '';
+            }
+        }
+    });
+    
+    document.getElementById('formModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('formModal').style.display = 'none';
+    currentEditId = null;
+}
+
+async function submitForm(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+    
+    try {
+        let response;
+        if (currentEditId) {
+            // 수정
+            response = await fetch(`/api/{{ model_name }}/${currentEditId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+        } else {
+            // 추가
+            response = await fetch(`/api/{{ model_name }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+        }
+        
+        if (response.ok) {
+            closeModal();
+            refreshTable();
+            showNotification('성공적으로 저장되었습니다.', 'success');
+        } else {
+            const error = await response.json();
+            showNotification('저장 실패: ' + error.detail, 'error');
+        }
+    } catch (error) {
+        showNotification('오류가 발생했습니다: ' + error.message, 'error');
+    }
+}
+
+async function deleteItem(id) {
+    if (!confirm('정말로 삭제하시겠습니까?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/{{ model_name }}/${id}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            refreshTable();
+            showNotification('성공적으로 삭제되었습니다.', 'success');
+        } else {
+            const error = await response.json();
+            showNotification('삭제 실패: ' + error.detail, 'error');
+        }
+    } catch (error) {
+        showNotification('오류가 발생했습니다: ' + error.message, 'error');
+    }
+}
+
+async function refreshTable() {
+    try {
+        const response = await fetch(`/api/{{ model_name }}`);
+        const items = await response.json();
+        
+        const tbody = document.querySelector('#dataTable tbody');
+        tbody.innerHTML = '';
+        
+        items.forEach(item => {
+            const row = document.createElement('tr');
+            row.setAttribute('data-id', item.id);
+            
+            const fields = {{ fields|list|tojson }};
+            fields.forEach(field => {
+                const cell = document.createElement('td');
+                cell.textContent = item[field.name] || '-';
+                row.appendChild(cell);
+            });
+            
+            const actionsCell = document.createElement('td');
+            actionsCell.className = 'actions';
+            actionsCell.innerHTML = `
+                <button class="btn btn-sm btn-primary" onclick="editItem(${item.id})">
+                    <i class="fas fa-edit"></i> 수정
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteItem(${item.id})">
+                    <i class="fas fa-trash"></i> 삭제
+                </button>
+            `;
+            row.appendChild(actionsCell);
+            tbody.appendChild(row);
+        });
+    } catch (error) {
+        showNotification('데이터를 불러오는데 실패했습니다: ' + error.message, 'error');
+    }
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// 검색 기능
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#dataTable tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+
+// 모달 외부 클릭 시 닫기
+window.onclick = function(event) {
+    const modal = document.getElementById('formModal');
+    if (event.target === modal) {
+        closeModal();
+    }
+}
+</script>
+{% endblock %}

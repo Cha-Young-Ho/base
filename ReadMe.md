@@ -1,6 +1,6 @@
 # yh-base: Database Management Package
 
-yh-db, yh-redis, yh-config 패키지를 포함한 데이터베이스 관리 라이브러리입니다.
+yh-db, yh-redis, yh-config, yh-auth, yh-admin 패키지를 포함한 데이터베이스 관리 라이브러리입니다.
 
 ## 🚀 설치 방법
 
@@ -21,9 +21,14 @@ pip install "git+https://github.com/yourusername/yh-base.git#egg=yh-base[redis]"
 pip install "git+https://github.com/yourusername/yh-base.git#egg=yh-base[mysql,redis]"
 ```
 
+#### Admin 기능 포함
+```bash
+pip install "git+https://github.com/yourusername/yh-base.git#egg=yh-base[mysql,redis,admin]"
+```
+
 #### 개발 도구 포함
 ```bash
-pip install "git+https://github.com/yourusername/yh-base.git#egg=yh-base[mysql,redis,dev]"
+pip install "git+https://github.com/yourusername/yh-base.git#egg=yh-base[mysql,redis,admin,dev]"
 ```
 
 ### 2. requirements.txt에 추가
@@ -44,6 +49,65 @@ pip install "git+https://github.com/yourusername/yh-base.git@abc1234#egg=yh-base
 ```
 
 ## 💻 사용 예시
+
+### 🎛️ Admin 기능 사용법 (자동 CRUD + 관리자 페이지)
+
+```python
+from dataclasses import dataclass
+from typing import Optional
+from fastapi import FastAPI
+from yh_mysql.mysql_manager import MySQLManager, MySQLConfig
+from yh_admin import AdminManager
+
+# 데이터 클래스 정의
+@dataclass
+class User:
+    id: int
+    name: str
+    email: str
+    age: Optional[int] = None
+    is_active: bool = True
+
+@dataclass
+class Product:
+    id: int
+    name: str
+    price: float
+    category: str
+    description: Optional[str] = None
+
+# FastAPI 앱 생성
+app = FastAPI()
+
+# MySQL Manager 설정
+mysql_config = MySQLConfig(
+    dbNameKey="main",
+    host="localhost",
+    port=3306,
+    user="root",
+    password="rootpassword",
+    database="myapp"
+)
+
+mysql_manager = MySQLManager([mysql_config])
+
+# Admin Manager 설정
+admin = AdminManager(mysql_manager)
+
+# 모델 등록 (자동으로 CRUD API + 관리자 페이지 생성)
+admin.register_model(User)
+admin.register_model(Product)
+
+# Admin 기능 활성화
+admin.enable_all(app)
+
+# 자동으로 생성되는 것들:
+# - GET/POST/PUT/DELETE /api/user
+# - GET/POST/PUT/DELETE /api/product
+# - /admin (메인 대시보드)
+# - /admin/user (User 관리 페이지)
+# - /admin/product (Product 관리 페이지)
+```
 
 ### 기본 사용법
 ```python

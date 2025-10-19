@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}오류{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="error-page">
+        <div class="error-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h1>오류가 발생했습니다</h1>
+        <p class="error-message">{{ error }}</p>
+        <div class="error-actions">
+            <a href="/admin" class="btn btn-primary">
+                <i class="fas fa-home"></i> 대시보드로 돌아가기
+            </a>
+            <button class="btn btn-secondary" onclick="history.back()">
+                <i class="fas fa-arrow-left"></i> 이전 페이지
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
