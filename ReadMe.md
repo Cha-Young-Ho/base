@@ -49,7 +49,7 @@ pip install "git+https://github.com/yourusername/yh-base.git@abc1234#egg=yh-base
 ```python
 import asyncio
 from yh_config import ConfigManager
-from yh_db import MySQLManager, MySQLConfig
+from yh_mysql import MySQLManager, MySQLConfig
 from yh_redis import RedisManager, RedisConfig
 
 async def main():
@@ -123,7 +123,7 @@ pytest
 ### 특정 패키지 테스트만
 ```bash
 # MySQL 테스트만
-pytest tests/yh_db/
+pytest tests/yh_mysql/
 
 # Redis 테스트만
 pytest tests/yh_redis/
@@ -261,7 +261,7 @@ jobs:
     
     - name: Run tests
       run: |
-        pytest -v --cov=yh_db --cov=yh_redis --cov=yh_config
+        pytest -v --cov=yh_mysql --cov=yh_redis --cov=yh_config
 ```
 
 ## 📦 패키지 크기 비교

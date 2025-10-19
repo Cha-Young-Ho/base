@@ -1,5 +1,5 @@
 import pytest
-from yh_db import MySQLManager, MySQLConfig
+from yh_mysql.mysql_manager import MySQLManager, MySQLConfig
 from pytest_mock import MockerFixture
 
 mysql_config = MySQLConfig(
@@ -22,10 +22,12 @@ class TestMySQLManager:
         mocker.patch("aiomysql.create_pool", side_effect=mock_create_pool)
         
         mysql_manager = MySQLManager([mysql_config])
-        await mysql_manager.initialize()
+        # get_connection_pool()을 호출해야 커넥션 풀이 생성됨
+        pool = await mysql_manager.get_connection_pool("test")
         
         assert "test" in mysql_manager.connection_pool_map
         assert mysql_manager.connection_pool_map["test"] == mock_pool
+        assert pool == mock_pool
 
     @pytest.mark.asyncio
     async def test_get_connection(self, mocker: MockerFixture):
@@ -45,7 +47,7 @@ class TestMySQLManager:
         mocker.patch("aiomysql.create_pool", side_effect=mock_create_pool)
         
         mysql_manager = MySQLManager([mysql_config])
-        await mysql_manager.initialize()
+        # initialize() 제거 - 생성자에서 자동으로 처리됨
         
         connection = await mysql_manager.get_connection("test")
         assert connection == mock_connection
@@ -78,7 +80,7 @@ class TestMySQLManager:
         mocker.patch("aiomysql.create_pool", side_effect=mock_create_pool)
         
         mysql_manager = MySQLManager([mysql_config])
-        await mysql_manager.initialize()
+        # initialize() 제거 - 생성자에서 자동으로 처리됨
         
         # 존재하지 않는 키로 요청
         with pytest.raises(KeyError, match="Database connection 'nonexistent' not found"):

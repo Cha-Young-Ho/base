@@ -14,14 +14,12 @@ class MySQLManager:
         self.configList = configList
         self.connection_pool_map = {}
     
-    def _ensure_connection_pools(self):
+    async def _ensure_connection_pools(self):
         """커넥션풀들이 없으면 생성"""
         if not self.connection_pool_map:
-            import asyncio
-            loop = asyncio.get_event_loop()
             for config in self.configList:
                 if config.dbNameKey not in self.connection_pool_map:
-                    pool = loop.run_until_complete(self.create_connection_pool(config))
+                    pool = await self.create_connection_pool(config)
                     self.connection_pool_map[config.dbNameKey] = pool
     
     async def create_connection_pool(self, config: MySQLConfig):
@@ -35,16 +33,16 @@ class MySQLManager:
             cursorclass=aiomysql.DictCursor
         )
     
-    def get_connection_pool(self, dbNameKey: str):
+    async def get_connection_pool(self, dbNameKey: str):
         """커넥션풀 반환 (Depends용)"""
-        self._ensure_connection_pools()
+        await self._ensure_connection_pools()
         if dbNameKey not in self.connection_pool_map:
             raise KeyError(f"Database connection '{dbNameKey}' not found")
         return self.connection_pool_map[dbNameKey]
     
     async def get_connection(self, dbNameKey: str):
         """커넥션 가져오기"""
-        pool = self.get_connection_pool(dbNameKey)
+        pool = await self.get_connection_pool(dbNameKey)
         return await pool.acquire()
     
     async def close_all_connections(self):

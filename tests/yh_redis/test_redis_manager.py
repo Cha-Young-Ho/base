@@ -1,6 +1,6 @@
 import pytest
 from pytest_mock import MockerFixture
-from yh_redis import RedisManager, RedisConfig
+from yh_redis.redis_manager import RedisManager, RedisConfig
 
 redis_config = RedisConfig(
     host="test",
@@ -20,8 +20,9 @@ class TestRedisManager:
         mock_connection_client = mocker.Mock()
 
         mocker.patch("redis.asyncio.Redis", return_value=mock_connection_client)
-        await redis_manager.initialize()
-        assert redis_manager.redisClient is not None
+        # initialize() 제거 - get_redis_client()에서 자동으로 처리됨
+        client = redis_manager.get_redis_client()
+        assert client is not None
     
     @pytest.mark.asyncio
     async def test_get_redis_client(self, mocker: MockerFixture):
@@ -29,6 +30,7 @@ class TestRedisManager:
         mock_connection_client = mocker.Mock()
 
         mocker.patch("redis.asyncio.Redis", return_value=mock_connection_client)
-        await redis_manager.initialize()
+        # initialize() 제거 - get_redis_client()에서 자동으로 처리됨
 
-        assert await redis_manager.get_redis_client() is not None
+        client = redis_manager.get_redis_client()
+        assert client is not None
